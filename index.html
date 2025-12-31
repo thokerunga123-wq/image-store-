@@ -144,7 +144,9 @@
 <div id="toast" class="toast">Copied</div>
 
 <script>
-  const baseURL = window.location.origin + window.location.pathname.replace("index.html", "");
+  // Fix base paths when site is in a subfolder (like /image-store/)
+  const basePath = window.location.pathname.replace(/\/[^\/]*$/, "/");
+  const baseURL = window.location.origin + basePath;
   const content = document.getElementById("content");
   const search = document.getElementById("search");
   const toast = document.getElementById("toast");
@@ -155,7 +157,7 @@
     setTimeout(() => toast.classList.remove("show"), 1200);
   }
 
-  fetch("images.json")
+  fetch(basePath + "../images.json")
     .then(res => res.json())
     .then(data => {
       Object.keys(data).forEach(folder => {
