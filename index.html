@@ -157,7 +157,8 @@
     setTimeout(() => toast.classList.remove("show"), 1200);
   }
 
-  fetch(basePath + "../images.json")
+  // images.json is inside the same folder as this page (image-store)
+  fetch(basePath + "images.json")
     .then(res => res.json())
     .then(data => {
       Object.keys(data).forEach(folder => {
