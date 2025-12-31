@@ -11,6 +11,7 @@
       --text: #ffffff;
       --muted: #aaaaaa;
       --accent: #ffb000;
+      --success: #22c55e;
     }
 
     * { box-sizing: border-box; }
@@ -23,9 +24,26 @@
       margin: 0;
     }
 
-    h2 { margin-bottom: 4px; }
+    h2 { margin-bottom: 6px; }
     p { margin-top: 0; color: var(--muted); }
-    h3 { margin-top: 40px; color: var(--accent); }
+    h3 { margin-top: 40px; color: var(--accent); text-transform: capitalize; }
+
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin: 16px 0 24px;
+      flex-wrap: wrap;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #000;
+      color: var(--text);
+    }
 
     .grid {
       display: grid;
@@ -50,6 +68,12 @@
       object-fit: cover;
       border-radius: 6px;
       background: #000;
+    }
+
+    .filename {
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
     }
 
     input {
@@ -83,6 +107,25 @@
 
     button:hover { opacity: 0.85; }
 
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--success);
+      color: #000;
+      padding: 10px 14px;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     @media (max-width: 600px) {
       img { height: 140px; }
     }
@@ -93,11 +136,24 @@
 <h2>Image Library</h2>
 <p>Images auto-load from folders inside the images directory.</p>
 
+<div class="top-bar">
+  <input id="search" class="search" placeholder="Search images or folders">
+</div>
+
 <div id="content"></div>
+<div id="toast" class="toast">Copied</div>
 
 <script>
   const baseURL = window.location.origin + window.location.pathname.replace("index.html", "");
   const content = document.getElementById("content");
+  const search = document.getElementById("search");
+  const toast = document.getElementById("toast");
+
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1200);
+  }
 
   fetch("images.json")
     .then(res => res.json())
@@ -109,16 +165,19 @@
 
         const grid = document.createElement("div");
         grid.className = "grid";
+        grid.dataset.folder = folder.toLowerCase();
 
         data[folder].forEach(file => {
           const link = `${baseURL}images/${folder}/${file}`;
-          const htmlCode = `<img src=\"${link}\" alt=\"\">`;
+          const htmlCode = `<img src="${link}" alt="">`;
 
           const card = document.createElement("div");
           card.className = "card";
+          card.dataset.search = `${folder} ${file}`.toLowerCase();
 
           card.innerHTML = `
             <img src="${link}">
+            <div class="filename">${file}</div>
             <input value="${link}" readonly>
             <button class="copy-link" data-copy="${link}">Copy Image Link</button>
             <button class="copy-html" data-copy="${htmlCode}">Copy HTML Embed</button>
@@ -137,10 +196,17 @@
   content.addEventListener("click", e => {
     if (e.target.dataset.copy) {
       navigator.clipboard.writeText(e.target.dataset.copy);
+      showToast("Copied to clipboard");
     }
+  });
+
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    document.querySelectorAll('.card').forEach(card => {
+      card.style.display = card.dataset.search.includes(q) ? "flex" : "none";
+    });
   });
 </script>
 
 </body>
 </html>
-
