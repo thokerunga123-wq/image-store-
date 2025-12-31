@@ -1,0 +1,47 @@
+name: Auto update images.json
+
+on:
+  push:
+    paths:
+      - "images/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate images.json
+        run: |
+          echo "{" > images.json
+          first_folder=true
+          for dir in images/*/; do
+            folder=$(basename "$dir")
+            if [ "$first_folder" = false ]; then
+              echo "," >> images.json
+            fi
+            first_folder=false
+            echo "\"$folder\": [" >> images.json
+
+            first_file=true
+            for file in "$dir"*; do
+              filename=$(basename "$file")
+              if [ "$first_file" = false ]; then
+                echo "," >> images.json
+              fi
+              first_file=false
+              echo "\"$filename\"" >> images.json
+            done
+
+            echo "]" >> images.json
+          done
+          echo "}" >> images.json
+
+      - name: Commit images.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add images.json
+          git commit -m "Auto update images.json" || echo "No changes"
+          git push
